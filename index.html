@@ -44,7 +44,6 @@ button {
 }
 
 .ri-btn { background: #2563eb; color: white; }
-.result-btn { background: #14b8a6; color: white; }
 
 #details {
   margin-top: 50px;
@@ -66,6 +65,8 @@ canvas {
 
 <script>
 
+const API_KEY = "KX4BC3R13GXW5NNA";
+
 const companies = {
 "BBAS3.SA": "https://ri.bb.com.br",
 "ITUB4.SA": "https://www.itau.com.br/relacoes-com-investidores/",
@@ -85,69 +86,51 @@ const companies = {
 };
 
 async function fetchStock(ticker) {
-  const res = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?range=1y&interval=1wk`);
-  const data = await res.json();
-  return data.chart.result[0];
+  const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${ticker}&apikey=${API_KEY}`;
+  const response = await fetch(url);
+  const data = await response.json();
+  return data["Time Series (Daily)"];
 }
 
-function createCard(stockData, ticker) {
-  const price = stockData.meta.regularMarketPrice;
-  const prev = stockData.meta.previousClose;
-  const change = ((price - prev) / prev * 100).toFixed(2);
-
+function createCard(ticker, price, change) {
   const div = document.createElement("div");
   div.className = "card";
 
   div.innerHTML = `
     <h3>${ticker.replace(".SA","")}</h3>
-    <p>Preço Atual: R$ ${price.toFixed(2)}</p>
+    <p>Preço: R$ ${price}</p>
     <p class="${change >= 0 ? "positive":"negative"}">
       ${change}% hoje
     </p>
     <button class="ri-btn" onclick="window.open('${companies[ticker]}','_blank')">
       Página RI
     </button>
-    <button class="result-btn" onclick="window.open('${companies[ticker]}/resultados','_blank')">
-      Últimos Resultados
-    </button>
   `;
-
-  div.onclick = () => showDetails(stockData, ticker);
 
   return div;
 }
 
-function showDetails(stockData, ticker) {
-  document.getElementById("details").innerHTML = `
-    <h2>${ticker.replace(".SA","")} - Histórico 1 Ano</h2>
-    <canvas id="chartCanvas" height="100"></canvas>
-  `;
-
-  const ctx = document.getElementById("chartCanvas");
-  const prices = stockData.indicators.quote[0].close;
-  const labels = stockData.timestamp.map(t =>
-    new Date(t * 1000).toLocaleDateString()
-  );
-
-  new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: labels,
-      datasets: [{
-        label: "Preço",
-        data: prices,
-        borderWidth: 2
-      }]
-    }
-  });
-}
-
 async function load() {
   const container = document.getElementById("stocks");
+
   for (let ticker in companies) {
     try {
-      const data = await fetchStock(ticker);
-      container.appendChild(createCard(data, ticker));
+      const series = await fetchStock(ticker);
+
+      if (!series) continue;
+
+      const dates = Object.keys(series);
+      const latest = series[dates[0]];
+      const previous = series[dates[1]];
+
+      const price = parseFloat(latest["4. close"]).toFixed(2);
+      const prevPrice = parseFloat(previous["4. close"]);
+      const change = (((price - prevPrice) / prevPrice) * 100).toFixed(2);
+
+      container.appendChild(createCard(ticker, price, change));
+
+      await new Promise(r => setTimeout(r, 15000)); // evita bloqueio API
+
     } catch (e) {
       console.log("Erro em", ticker);
     }
