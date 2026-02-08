@@ -110,28 +110,63 @@ function createCard(ticker, price, change) {
   return div;
 }
 
-async function load() {
+  async function load() {
   const container = document.getElementById("stocks");
+  let totalYTD = 0;
+  let count = 0;
 
   for (let ticker in companies) {
     try {
       const series = await fetchStock(ticker);
-
       if (!series) continue;
 
       const dates = Object.keys(series);
       const latest = series[dates[0]];
-      const previous = series[dates[1]];
+      const firstDateOfYear = dates.find(d => d.startsWith(new Date().getFullYear().toString()));
 
-      const price = parseFloat(latest["4. close"]).toFixed(2);
-      const prevPrice = parseFloat(previous["4. close"]);
-      const change = (((price - prevPrice) / prevPrice) * 100).toFixed(2);
+      if (!firstDateOfYear) continue;
 
-      container.appendChild(createCard(ticker, price, change));
+      const startYearPrice = parseFloat(series[firstDateOfYear]["4. close"]);
+      const currentPrice = parseFloat(latest["4. close"]);
 
-      await new Promise(r => setTimeout(r, 15000)); // evita bloqueio API
+      const ytd = (((currentPrice - startYearPrice) / startYearPrice) * 100);
+      totalYTD += ytd;
+      count++;
+
+      const div = document.createElement("div");
+      div.className = "card";
+
+      div.innerHTML = `
+        <h3>${ticker.replace(".SA","")}</h3>
+        <p>Preço Atual: R$ ${currentPrice.toFixed(2)}</p>
+        <p>YTD: <span class="${ytd >= 0 ? "positive":"negative"}">${ytd.toFixed(2)}%</span></p>
+        <button class="ri-btn" onclick="window.open('${companies[ticker]}','_blank')">
+          Página RI
+        </button>
+      `;
+
+      container.appendChild(div);
+
+      await new Promise(r => setTimeout(r, 15000));
 
     } catch (e) {
+      console.log("Erro em", ticker);
+    }
+  }
+
+  const carteiraYTD = (totalYTD / count).toFixed(2);
+
+  const summary = document.createElement("div");
+  summary.innerHTML = `
+    <h2>📊 Performance da Carteira (Peso Igual)</h2>
+    <h3 class="${carteiraYTD >= 0 ? "positive":"negative"}">
+      YTD Carteira: ${carteiraYTD}%
+    </h3>
+  `;
+
+  document.body.insertBefore(summary, container);
+}
+ catch (e) {
       console.log("Erro em", ticker);
     }
   }
