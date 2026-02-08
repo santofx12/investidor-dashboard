@@ -1,142 +1,17 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<title>Detalhe da Ação</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-body {
-  margin:0;
-  font-family:Arial;
-  background:#0f172a;
-  color:white;
-}
-
-header {
-  padding:20px;
-  background:#111827;
-  display:flex;
-  align-items:center;
-  gap:15px;
-}
-
-button {
-  padding:8px 12px;
-  background:#2563eb;
-  border:none;
-  border-radius:6px;
-  color:white;
-  cursor:pointer;
-}
-
-.section {
-  padding:20px;
-  max-width:900px;
-  margin:auto;
-}
-
-.info-box {
-  background:#1f2937;
-  padding:20px;
-  border-radius:12px;
-  margin-bottom:20px;
-}
-
-canvas {
-  background:#1f2937;
-  border-radius:12px;
-  padding:15px;
-}
-</style>
-</head>
-
-<body>
-
-<header>
-  <button onclick="window.location.href='index.html'">← Voltar</button>
-  <h2 id="symbol"></h2>
-</header>
-
-<div class="section">
-
-  <div class="info-box">
-    <p id="price"></p>
-    <p id="ytd"></p>
-    <p id="dividend"></p>
-  </div>
-
-  <canvas id="chart"></canvas>
-
-</div>
-
 <script>
-async function load() {
-
-  const params = new URLSearchParams(window.location.search);
-  const symbol = params.get("symbol");
-
-  const res = await fetch('./data.json');
-  const data = await res.json();
-  const stock = data.stocks.find(s => s.symbol === symbol);
-
-  document.getElementById('symbol').innerText = stock.symbol;
-  document.getElementById('price').innerText = "Preço atual: R$ " + stock.price.toFixed(2);
-  document.getElementById('ytd').innerText = "Variação YTD: " + stock.ytd + "%";
-  document.getElementById('dividend').innerText =
-    "Próximo dividendo: " + stock.dividendDate;
-
-  new Chart(document.getElementById('chart'), {
-    type: 'line',
-    data: {
-      labels: stock.history.map((_, i) => "Dia " + (i+1)),
-      datasets: [{
-        label: "Preço",
-        data: stock.history,
-        borderColor: stock.ytd >= 0 ? "#22c55e" : "#ef4444",
-        backgroundColor: "rgba(34,197,94,0.1)",
-        fill: true,
-        tension: 0.4,
-        pointRadius: 0,
-        pointHoverRadius: 6
-      }]
-    },
-    options: {
-      responsive: true,
-      interaction: {
-        mode: 'index',
-        intersect: false
-      },
-      plugins: {
-        legend: { display:false },
-        tooltip: {
-          enabled: true,
-          callbacks: {
-            label: function(context) {
-              return "R$ " + context.parsed.y.toFixed(2);
-            }
-          }
-        }
-      },
-      scales: {
-        x: {
-          display:false
-        },
-        y: {
-          ticks: {
-            color: "white",
-            callback: function(value) {
-              return "R$ " + value.toFixed(2);
-            }
-          }
-        }
-      }
-    }
-  });
+function generateHistory(base, current){
+  let history=[]
+  let today=new Date()
+  for(let i=365;i>=0;i--){
+    let d=new Date()
+    d.setDate(today.getDate()-i)
+    let variation=(Math.random()-0.5)*2
+    base+=variation
+    history.push({
+      date:d.toISOString().split("T")[0],
+      price:Number(base.toFixed(2))
+    })
+  }
+  return history
 }
-
-load();
 </script>
-
-</body>
-</html>
