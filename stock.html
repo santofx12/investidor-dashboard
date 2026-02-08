@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Detalhe da Ação</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body { margin:0; font-family:Arial; background:#0f172a; color:white; }
+header { padding:20px; background:#111827; }
+.section { padding:20px; }
+button {
+  padding:8px 12px;
+  background:#2563eb;
+  border:none;
+  border-radius:6px;
+  color:white;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <button onclick="window.location.href='index.html'">← Voltar</button>
+</header>
+
+<div class="section">
+  <h1 id="symbol"></h1>
+  <p id="price"></p>
+  <p id="ytd"></p>
+  <p id="dividend"></p>
+</div>
+
+<div class="section">
+  <canvas id="chart"></canvas>
+</div>
+
+<script>
+async function load() {
+  const params = new URLSearchParams(window.location.search);
+  const symbol = params.get("symbol");
+
+  const res = await fetch('./data.json');
+  const data = await res.json();
+
+  const stock = data.stocks.find(s => s.symbol === symbol);
+
+  document.getElementById('symbol').innerText = stock.symbol;
+  document.getElementById('price').innerText = "Preço: R$ " + stock.price;
+  document.getElementById('ytd').innerText = "YTD: " + stock.ytd + "%";
+  document.getElementById('dividend').innerText =
+    "Próximo Dividendo: " + stock.dividendDate;
+
+  new Chart(document.getElementById('chart'), {
+    type: 'line',
+    data: {
+      labels: stock.history.map((_, i) => "Dia " + (i+1)),
+      datasets: [{
+        data: stock.history,
+        borderColor: stock.ytd >= 0 ? "#22c55e" : "#ef4444",
+        borderWidth: 2,
+        fill: false,
+        tension: 0.3
+      }]
+    },
+    options: {
+      plugins: { legend: { display:false } },
+      scales: {
+        x: { display:false },
+        y: { ticks: { color:"white" } }
+      }
+    }
+  });
+}
+
+load();
+</script>
+
+</body>
+</html>
