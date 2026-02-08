@@ -1,75 +1,181 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Dashboard do Investidor</title>
+<title>Dashboard Investidor</title>
 
 <style>
-body { margin:0; font-family:Arial; background:#0f172a; color:white; }
-header { padding:20px; text-align:center; font-size:28px; background:#111827; }
-.section { padding:20px; }
-#stocks { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:20px; }
+body{
+  margin:0;
+  font-family:Arial;
+  background:#0f172a;
+  color:white;
+}
 
-.card {
+header{
+  background:#111827;
+  padding:20px;
+  text-align:center;
+}
+
+.container{
+  max-width:1200px;
+  margin:auto;
+  padding:20px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:15px;
+  margin-bottom:40px;
+}
+
+.card{
   background:#1f2937;
   padding:15px;
   border-radius:12px;
   cursor:pointer;
   transition:0.2s;
 }
-.card:hover { transform:scale(1.03); background:#273449; }
 
-.positive { color:#22c55e; }
-.negative { color:#ef4444; }
+.card:hover{
+  transform:translateY(-4px);
+  background:#273549;
+}
 
-.badge {
-  display:inline-block;
-  padding:4px 8px;
-  border-radius:6px;
+.calendar{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:5px;
+}
+
+.day{
+  background:#1f2937;
+  min-height:100px;
+  padding:6px;
+  border-radius:8px;
   font-size:12px;
-  background:#374151;
-  margin-top:5px;
+}
+
+.day-number{
+  font-weight:bold;
+  margin-bottom:5px;
+}
+
+.dividend{
+  background:#16a34a;
+  padding:2px 4px;
+  border-radius:4px;
+  font-size:11px;
+  margin-bottom:2px;
+}
+
+.month-title{
+  margin:20px 0 10px 0;
+  font-size:20px;
 }
 </style>
 </head>
 
 <body>
 
-<header>Dashboard do Investidor</header>
+<header>
+  <h1>📊 Meu Dashboard</h1>
+</header>
 
-<div class="section" id="stocks"></div>
+<div class="container">
+
+  <div class="grid" id="stocks"></div>
+
+  <h2 class="month-title">📅 Calendário de Dividendos</h2>
+  <div id="calendar"></div>
+
+</div>
 
 <script>
-async function load() {
-  const res = await fetch('./data.json');
-  const data = await res.json();
 
-  const container = document.getElementById('stocks');
-  container.innerHTML = '';
-
-  data.stocks.forEach(stock => {
-
-    const ytdClass = stock.ytd >= 0 ? "positive" : "negative";
-
-    const div = document.createElement('div');
-    div.className = 'card';
-
-    div.onclick = () => {
-      window.location.href = "stock.html?symbol=" + stock.symbol;
-    };
-
-    div.innerHTML = `
-      <h2>${stock.symbol}</h2>
-      <p>Preço: R$ ${stock.price.toFixed(2)}</p>
-      <p class="${ytdClass}">YTD: ${stock.ytd}%</p>
-      <div class="badge">Próx. Div: ${stock.dividendDate}</div>
-    `;
-
-    container.appendChild(div);
-  });
+function formatBR(dateString){
+  const d=new Date(dateString)
+  return d.toLocaleDateString("pt-BR")
 }
 
-load();
+async function load(){
+
+  const res=await fetch("./data.json")
+  const data=await res.json()
+
+  const stocksDiv=document.getElementById("stocks")
+
+  data.stocks.forEach(stock=>{
+
+    stocksDiv.innerHTML+=`
+      <div class="card" onclick="window.location.href='stock.html?symbol=${stock.symbol}'">
+        <h3>${stock.symbol}</h3>
+        <p>Preço: R$ ${stock.price.toFixed(2)}</p>
+        <p>YTD: ${stock.ytd}%</p>
+        <p>Dividendo: ${formatBR(stock.dividendDate)}</p>
+      </div>
+    `
+  })
+
+  buildCalendar(data.stocks)
+}
+
+function buildCalendar(stocks){
+
+  const calendarDiv=document.getElementById("calendar")
+  calendarDiv.innerHTML=""
+
+  const now=new Date()
+  const year=now.getFullYear()
+
+  const months=[
+    "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+    "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"
+  ]
+
+  months.forEach((monthName,monthIndex)=>{
+
+    const monthDiv=document.createElement("div")
+    monthDiv.innerHTML=`<h3>${monthName} ${year}</h3>`
+    
+    const grid=document.createElement("div")
+    grid.className="calendar"
+
+    const daysInMonth=new Date(year,monthIndex+1,0).getDate()
+
+    for(let day=1;day<=daysInMonth;day++){
+
+      const cell=document.createElement("div")
+      cell.className="day"
+
+      const number=document.createElement("div")
+      number.className="day-number"
+      number.innerText=day
+
+      cell.appendChild(number)
+
+      stocks.forEach(stock=>{
+        const divDate=new Date(stock.dividendDate)
+
+        if(divDate.getMonth()===monthIndex && divDate.getDate()===day){
+          const badge=document.createElement("div")
+          badge.className="dividend"
+          badge.innerText=stock.symbol
+          cell.appendChild(badge)
+        }
+      })
+
+      grid.appendChild(cell)
+    }
+
+    monthDiv.appendChild(grid)
+    calendarDiv.appendChild(monthDiv)
+  })
+}
+
+load()
 </script>
 
 </body>
