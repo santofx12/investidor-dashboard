@@ -94,4 +94,16 @@
     {
       "symbol": "CPLE3",
       "price": 8.90,
-      "yt
+      "ytd": 2.2,
+      "dividendDate": "2026-04-12",
+      "history": generateHistory(8, 8.9)
+    },
+    {
+      "symbol": "CXSE3",
+      "price": 15.70,
+      "ytd": 7.6,
+      "dividendDate": "2026-03-18",
+      "history": generateHistory(14, 15.7)
+    }
+  ]
+}
