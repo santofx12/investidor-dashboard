@@ -3,8 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <title>Painel do Investidor</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
 body {
   font-family: Arial, sans-serif;
@@ -45,14 +43,8 @@ button {
 
 .ri-btn { background: #2563eb; color: white; }
 
-#details {
-  margin-top: 50px;
-}
-
-canvas {
-  background: white;
-  border-radius: 10px;
-  padding: 10px;
+.summary {
+  margin-bottom: 30px;
 }
 </style>
 </head>
@@ -60,143 +52,75 @@ canvas {
 
 <h1>Painel Estratégico de Investimentos</h1>
 
+<div class="summary" id="summary"></div>
 <div class="grid" id="stocks"></div>
-<div id="details"></div>
 
 <script>
 
-const API_KEY = "KX4BC3R13GXW5NNA";
-
 const companies = {
-"BBAS3.SA": "https://ri.bb.com.br",
-"ITUB4.SA": "https://www.itau.com.br/relacoes-com-investidores/",
-"BBDC4.SA": "https://ri.bradesco.com.br",
-"CMIG4.SA": "https://ri.cemig.com.br",
-"SANB4.SA": "https://ri.santander.com.br",
-"BPAC5.SA": "https://ri.btgpactual.com",
-"VIVT3.SA": "https://ri.telefonica.com.br",
-"TIMS3.SA": "https://ri.tim.com.br",
-"DASA3.SA": "https://ri.dasa.com.br",
-"FESA4.SA": "https://ri.ferbasa.com.br",
-"RADL3.SA": "https://ri.rd.com.br",
-"PSSA3.SA": "https://ri.portoseguro.com.br",
-"EGIE3.SA": "https://ri.engie.com.br",
-"CPLE3.SA": "https://ri.copel.com",
-"CXSE3.SA": "https://ri.caixaseguridade.com.br"
+"BBAS3": "https://ri.bb.com.br",
+"ITUB4": "https://www.itau.com.br/relacoes-com-investidores/",
+"BBDC4": "https://ri.bradesco.com.br",
+"CMIG4": "https://ri.cemig.com.br",
+"SANB4": "https://ri.santander.com.br",
+"BPAC5": "https://ri.btgpactual.com",
+"VIVT3": "https://ri.telefonica.com.br",
+"TIMS3": "https://ri.tim.com.br",
+"DASA3": "https://ri.dasa.com.br",
+"FESA4": "https://ri.ferbasa.com.br",
+"RADL3": "https://ri.rd.com.br",
+"PSSA3": "https://ri.portoseguro.com.br",
+"EGIE3": "https://ri.engie.com.br",
+"CPLE3": "https://ri.copel.com",
+"CXSE3": "https://ri.caixaseguridade.com.br"
 };
 
-async function fetchStock(ticker) {
-  const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${ticker}&apikey=${API_KEY}`;
-  const response = await fetch(url);
+async function load() {
+
+  const tickers = Object.keys(companies).join(",");
+  const response = await fetch(`https://brapi.dev/api/quote/${tickers}`);
   const data = await response.json();
-  return data["Time Series (Daily)"];
-}
 
-function createCard(ticker, price, change) {
-  const div = document.createElement("div");
-  div.className = "card";
-
-  div.innerHTML = `
-    <h3>${ticker.replace(".SA","")}</h3>
-    <p>Preço: R$ ${price}</p>
-    <p class="${change >= 0 ? "positive":"negative"}">
-      ${change}% hoje
-    </p>
-    <button class="ri-btn" onclick="window.open('${companies[ticker]}','_blank')">
-      Página RI
-    </button>
-  `;
-
-  return div;
-}
-
-  async function load() {async function load() {
   const container = document.getElementById("stocks");
+  const summary = document.getElementById("summary");
+
   let totalYTD = 0;
-  let count = 0;
 
-  for (let ticker in companies) {
-    try {
-      const series = await fetchStock(ticker);
-      if (!series) continue;
+  data.results.forEach(stock => {
 
-      const dates = Object.keys(series);
-      const latest = series[dates[0]];
-      const firstDateOfYear = dates.find(d => 
-        d.startsWith(new Date().getFullYear().toString())
-      );
+    const ytd = stock.regularMarketChangePercent;
+    totalYTD += ytd;
 
-      if (!firstDateOfYear) continue;
+    const div = document.createElement("div");
+    div.className = "card";
 
-      const startYearPrice = parseFloat(series[firstDateOfYear]["4. close"]);
-      const currentPrice = parseFloat(latest["4. close"]);
-
-      const ytd = (((currentPrice - startYearPrice) / startYearPrice) * 100);
-      totalYTD += ytd;
-      count++;
-
-      const div = document.createElement("div");
-      div.className = "card";
-
-      div.innerHTML = `
-        <h3>${ticker.replace(".SA","")}</h3>
-        <p>Preço Atual: R$ ${currentPrice.toFixed(2)}</p>
-        <p>YTD: <span class="${ytd >= 0 ? "positive":"negative"}">
-          ${ytd.toFixed(2)}%
-        </span></p>
-        <button class="ri-btn" onclick="window.open('${companies[ticker]}','_blank')">
-          Página RI
-        </button>
-      `;
-
-      container.appendChild(div);
-
-      await new Promise(r => setTimeout(r, 15000));
-
-    } catch (e) {
-      console.log("Erro em", ticker);
-    }
-  }
-
-  if (count > 0) {
-    const carteiraYTD = (totalYTD / count).toFixed(2);
-
-    const summary = document.createElement("div");
-    summary.innerHTML = `
-      <h2>📊 Performance da Carteira (Peso Igual)</h2>
-      <h3 class="${carteiraYTD >= 0 ? "positive":"negative"}">
-        YTD Carteira: ${carteiraYTD}%
-      </h3>
+    div.innerHTML = `
+      <h3>${stock.symbol}</h3>
+      <p>Preço: R$ ${stock.regularMarketPrice.toFixed(2)}</p>
+      <p>YTD: <span class="${ytd >= 0 ? "positive":"negative"}">
+        ${ytd.toFixed(2)}%
+      </span></p>
+      <button class="ri-btn" onclick="window.open('${companies[stock.symbol]}','_blank')">
+        Página RI
+      </button>
     `;
 
-    document.body.insertBefore(summary, container);
-  }
-}
-  } catch (e) {
-      console.log("Erro em", ticker);
-    }
-  }
+    container.appendChild(div);
+  });
 
-  const carteiraYTD = (totalYTD / count).toFixed(2);
+  const carteiraYTD = (totalYTD / data.results.length).toFixed(2);
 
-  const summary = document.createElement("div");
   summary.innerHTML = `
     <h2>📊 Performance da Carteira (Peso Igual)</h2>
     <h3 class="${carteiraYTD >= 0 ? "positive":"negative"}">
       YTD Carteira: ${carteiraYTD}%
     </h3>
   `;
-
-  document.body.insertBefore(summary, container);
-}
- catch (e) {
-      console.log("Erro em", ticker);
-    }
-  }
 }
 
 load();
 
 </script>
+
 </body>
 </html>
