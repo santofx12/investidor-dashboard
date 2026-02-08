@@ -1,0 +1,20 @@
+{
+  "lastUpdate": "2026-02-07",
+  "stocks": [
+    { "symbol": "BBAS3", "price": 52.30, "ytd": 4.5, "dividendDate": "2026-03-15" },
+    { "symbol": "ITUB4", "price": 34.10, "ytd": 2.1, "dividendDate": "2026-02-20" },
+    { "symbol": "BBDC4", "price": 17.80, "ytd": -3.2, "dividendDate": "2026-03-01" },
+    { "symbol": "CMIG4", "price": 12.50, "ytd": 6.8, "dividendDate": "2026-02-28" },
+    { "symbol": "SANB4", "price": 28.00, "ytd": 1.4, "dividendDate": "2026-03-10" },
+    { "symbol": "BPAC5", "price": 38.20, "ytd": 5.9, "dividendDate": "2026-03-05" },
+    { "symbol": "VIVT3", "price": 46.70, "ytd": 3.3, "dividendDate": "2026-02-25" },
+    { "symbol": "TIMS3", "price": 16.20, "ytd": 0.9, "dividendDate": "2026-03-12" },
+    { "symbol": "DASA3", "price": 5.80, "ytd": -8.4, "dividendDate": "2026-03-18" },
+    { "symbol": "FESA4", "price": 41.00, "ytd": 7.1, "dividendDate": "2026-02-27" },
+    { "symbol": "RADL3", "price": 24.90, "ytd": 2.8, "dividendDate": "2026-03-08" },
+    { "symbol": "PSSA3", "price": 26.30, "ytd": 4.2, "dividendDate": "2026-03-22" },
+    { "symbol": "EGIE3", "price": 44.50, "ytd": 3.7, "dividendDate": "2026-02-26" },
+    { "symbol": "CPLE3", "price": 8.90, "ytd": 1.1, "dividendDate": "2026-03-02" },
+    { "symbol": "CXSE3", "price": 15.40, "ytd": 2.6, "dividendDate": "2026-03-14" }
+  ]
+}
