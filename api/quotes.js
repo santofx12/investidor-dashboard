@@ -10,11 +10,19 @@ export default async function handler(req, res) {
   const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols.join(",")}`;
 
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0"
+      }
+    });
+
     const data = await response.json();
 
-    res.status(200).json(data.quoteResponse);
+    res.status(200).json({
+      results: data.quoteResponse.result
+    });
+
   } catch (error) {
-    res.status(500).json({ error: "Erro ao buscar dados" });
+    res.status(500).json({ error: error.message });
   }
 }
