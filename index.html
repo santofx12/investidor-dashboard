@@ -110,7 +110,7 @@ function createCard(ticker, price, change) {
   return div;
 }
 
-  async function load() {
+  async function load() {async function load() {
   const container = document.getElementById("stocks");
   let totalYTD = 0;
   let count = 0;
@@ -122,7 +122,9 @@ function createCard(ticker, price, change) {
 
       const dates = Object.keys(series);
       const latest = series[dates[0]];
-      const firstDateOfYear = dates.find(d => d.startsWith(new Date().getFullYear().toString()));
+      const firstDateOfYear = dates.find(d => 
+        d.startsWith(new Date().getFullYear().toString())
+      );
 
       if (!firstDateOfYear) continue;
 
@@ -139,7 +141,9 @@ function createCard(ticker, price, change) {
       div.innerHTML = `
         <h3>${ticker.replace(".SA","")}</h3>
         <p>Preço Atual: R$ ${currentPrice.toFixed(2)}</p>
-        <p>YTD: <span class="${ytd >= 0 ? "positive":"negative"}">${ytd.toFixed(2)}%</span></p>
+        <p>YTD: <span class="${ytd >= 0 ? "positive":"negative"}">
+          ${ytd.toFixed(2)}%
+        </span></p>
         <button class="ri-btn" onclick="window.open('${companies[ticker]}','_blank')">
           Página RI
         </button>
@@ -150,6 +154,25 @@ function createCard(ticker, price, change) {
       await new Promise(r => setTimeout(r, 15000));
 
     } catch (e) {
+      console.log("Erro em", ticker);
+    }
+  }
+
+  if (count > 0) {
+    const carteiraYTD = (totalYTD / count).toFixed(2);
+
+    const summary = document.createElement("div");
+    summary.innerHTML = `
+      <h2>📊 Performance da Carteira (Peso Igual)</h2>
+      <h3 class="${carteiraYTD >= 0 ? "positive":"negative"}">
+        YTD Carteira: ${carteiraYTD}%
+      </h3>
+    `;
+
+    document.body.insertBefore(summary, container);
+  }
+}
+  } catch (e) {
       console.log("Erro em", ticker);
     }
   }
