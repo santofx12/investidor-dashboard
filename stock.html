@@ -1,17 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Detalhe</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{
+  margin:0;
+  background:#0f172a;
+  font-family:Arial;
+  color:white;
+}
+header{
+  background:#111827;
+  padding:20px;
+  display:flex;
+  justify-content:space-between;
+}
+button{
+  background:#2563eb;
+  border:none;
+  color:white;
+  padding:8px 12px;
+  border-radius:6px;
+  cursor:pointer;
+}
+.container{
+  max-width:1000px;
+  margin:auto;
+  padding:20px;
+}
+.filters button{
+  margin-right:5px;
+  background:#1f2937;
+}
+canvas{
+  background:#1f2937;
+  border-radius:12px;
+  padding:10px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <button onclick="window.location.href='index.html'">← Voltar</button>
+  <h2 id="symbol"></h2>
+</header>
+
+<div class="container">
+  <div id="info"></div>
+
+  <div class="filters">
+    <button onclick="filterRange(30)">1M</button>
+    <button onclick="filterRange(90)">3M</button>
+    <button onclick="filterRange(180)">6M</button>
+    <button onclick="filterRange(365)">1Y</button>
+  </div>
+
+  <canvas id="chart"></canvas>
+</div>
+
 <script>
-function generateHistory(base, current){
+
+let fullHistory=[]
+let chart
+
+function generateHistory(currentPrice){
   let history=[]
   let today=new Date()
+  let price=currentPrice-5
+
   for(let i=365;i>=0;i--){
     let d=new Date()
     d.setDate(today.getDate()-i)
-    let variation=(Math.random()-0.5)*2
-    base+=variation
+
+    price += (Math.random()-0.5)*1.5
+
     history.push({
       date:d.toISOString().split("T")[0],
-      price:Number(base.toFixed(2))
+      price:Number(price.toFixed(2))
     })
   }
+
   return history
 }
+
+async function load(){
+
+  const params=new URLSearchParams(window.location.search)
+  const symbol=params.get("symbol")
+
+  const res=await fetch("./data.json")
+  const data=await res.json()
+  const stock=data.stocks.find(s=>s.symbol===symbol)
+
+  document.getElementById("symbol").innerText=stock.symbol
+
+  document.getElementById("info").innerHTML=`
+    <p>Preço atual: R$ ${stock.price.toFixed(2)}</p>
+    <p>YTD: ${stock.ytd}%</p>
+    <p>Próx. dividendo: ${stock.dividendDate}</p>
+  `
+
+  fullHistory=generateHistory(stock.price)
+  renderChart(fullHistory)
+}
+
+function renderChart(history){
+
+  if(chart) chart.destroy()
+
+  chart=new Chart(document.getElementById("chart"),{
+    type:"line",
+    data:{
+      labels:history.map(h=>h.date),
+      datasets:[{
+        data:history.map(h=>h.price),
+        borderColor:"#22c55e",
+        backgroundColor:"rgba(34,197,94,0.1)",
+        fill:true,
+        tension:0.4,
+        pointRadius:0,
+        pointHoverRadius:6
+      }]
+    },
+    options:{
+      responsive:true,
+      interaction:{mode:"index",intersect:false},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            label:(c)=>"R$ "+c.parsed.y.toFixed(2)
+          }
+        }
+      },
+      scales:{
+        x:{ticks:{color:"white"}},
+        y:{
+          ticks:{
+            color:"white",
+            callback:(v)=>"R$ "+v.toFixed(2)
+          }
+        }
+      }
+    }
+  })
+}
+
+function filterRange(days){
+  renderChart(fullHistory.slice(-days))
+}
+
+load()
 </script>
+
+</body>
+</html>
