@@ -1,20 +1,19 @@
 export default async function handler(req, res) {
 
-  const tickers = [
-    "BBAS3","ITUB4","BBDC4","CMIG4","SANB4",
-    "BPAC5","VIVT3","TIMS3","DASA3","FESA4",
-    "RADL3","PSSA3","EGIE3","CPLE3","CXSE3"
+  const symbols = [
+    "BBAS3.SA","ITUB4.SA","BBDC4.SA","CMIG4.SA",
+    "SANB4.SA","BPAC5.SA","VIVT3.SA","TIMS3.SA",
+    "DASA3.SA","FESA4.SA","RADL3.SA","PSSA3.SA",
+    "EGIE3.SA","CPLE3.SA","CXSE3.SA"
   ];
 
-  try {
-    const response = await fetch(
-      `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${tickers.join(",")}.SA`
-    );
+  const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${symbols.join(",")}`;
 
+  try {
+    const response = await fetch(url);
     const data = await response.json();
 
-    res.status(200).json(data);
-
+    res.status(200).json(data.quoteResponse);
   } catch (error) {
     res.status(500).json({ error: "Erro ao buscar dados" });
   }
