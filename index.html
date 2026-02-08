@@ -20,36 +20,41 @@ const companies = {
 
 async function load() {
 
-  const response = await fetch("/api/quotes");
-  const data = await response.json();
+  try {
+    const res = await fetch('/api/quotes');
+    const data = await res.json();
 
-  const container = document.getElementById("stocks");
+    console.log("API response:", data);
 
-  let totalYTD = 0;
+    const stocks = data.results || data; // fallback seguro
 
-  data.quoteResponse.result.forEach(stock => {
+    const container = document.getElementById('stocks');
+    container.innerHTML = '';
 
-    const price = stock.regularMarketPrice;
-    const change = stock.regularMarketChangePercent;
+    stocks.forEach(stock => {
+      const div = document.createElement('div');
+      div.className = 'card';
 
-    totalYTD += change;
+      div.innerHTML = `
+        <h2>${stock.symbol}</h2>
+        <p>Preço: R$ ${stock.regularMarketPrice?.toFixed(2) || '-'}</p>
+        <p>Variação: ${stock.regularMarketChangePercent?.toFixed(2) || '-'}%</p>
+        <p>Máx 52s: R$ ${stock.fiftyTwoWeekHigh?.toFixed(2) || '-'}</p>
+        <p>Mín 52s: R$ ${stock.fiftyTwoWeekLow?.toFixed(2) || '-'}</p>
+      `;
 
-    const div = document.createElement("div");
-    div.className = "card";
+      container.appendChild(div);
+    });
 
-    div.innerHTML = `
-      <h3>${stock.symbol.replace(".SA","")}</h3>
-      <p>Preço: R$ ${price.toFixed(2)}</p>
-      <p class="${change >= 0 ? "positive":"negative"}">
-        ${change.toFixed(2)}%
-      </p>
-      <button class="ri-btn" onclick="window.open('${companies[stock.symbol.replace(".SA","")]}','_blank')">
-        Página RI
-      </button>
-    `;
+  } catch (err) {
+    console.error("Erro ao carregar:", err);
+    document.getElementById('stocks').innerHTML =
+      "<p style='color:red'>Erro ao carregar dados.</p>";
+  }
+}
 
-    container.appendChild(div);
-  });
+load();
+</script>  });
 
   const carteiraYTD = (totalYTD / data.quoteResponse.result.length).toFixed(2);
 
