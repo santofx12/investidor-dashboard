@@ -1,44 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard do Investidor</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+    }
+
+    header {
+      padding: 20px;
+      text-align: center;
+      font-size: 28px;
+      font-weight: bold;
+      background: #1e293b;
+    }
+
+    #stocks {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .card {
+      background: #1e293b;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+
+    .positive {
+      color: #22c55e;
+    }
+
+    .negative {
+      color: #ef4444;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  Dashboard do Investidor
+</header>
+
+<div id="stocks"></div>
+
 <script>
-
-const companies = {
-"BBAS3": "https://ri.bb.com.br",
-"ITUB4": "https://www.itau.com.br/relacoes-com-investidores/",
-"BBDC4": "https://ri.bradesco.com.br",
-"CMIG4": "https://ri.cemig.com.br",
-"SANB4": "https://ri.santander.com.br",
-"BPAC5": "https://ri.btgpactual.com",
-"VIVT3": "https://ri.telefonica.com.br",
-"TIMS3": "https://ri.tim.com.br",
-"DASA3": "https://ri.dasa.com.br",
-"FESA4": "https://ri.ferbasa.com.br",
-"RADL3": "https://ri.rd.com.br",
-"PSSA3": "https://ri.portoseguro.com.br",
-"EGIE3": "https://ri.engie.com.br",
-"CPLE3": "https://ri.copel.com",
-"CXSE3": "https://ri.caixaseguridade.com.br"
-};
-
 async function load() {
-
   try {
     const res = await fetch('/api/quotes');
     const data = await res.json();
 
     console.log("API response:", data);
 
-    const stocks = data.results || data; // fallback seguro
+    const stocks = data.results || [];
 
     const container = document.getElementById('stocks');
     container.innerHTML = '';
 
     stocks.forEach(stock => {
+      const change = stock.regularMarketChangePercent || 0;
+      const changeClass = change >= 0 ? "positive" : "negative";
+
       const div = document.createElement('div');
       div.className = 'card';
 
       div.innerHTML = `
         <h2>${stock.symbol}</h2>
         <p>Preço: R$ ${stock.regularMarketPrice?.toFixed(2) || '-'}</p>
-        <p>Variação: ${stock.regularMarketChangePercent?.toFixed(2) || '-'}%</p>
+        <p class="${changeClass}">
+          Variação: ${change.toFixed(2)}%
+        </p>
         <p>Máx 52s: R$ ${stock.fiftyTwoWeekHigh?.toFixed(2) || '-'}</p>
         <p>Mín 52s: R$ ${stock.fiftyTwoWeekLow?.toFixed(2) || '-'}</p>
       `;
@@ -54,21 +92,7 @@ async function load() {
 }
 
 load();
-</script>  });
-
-  const carteiraYTD = (totalYTD / data.quoteResponse.result.length).toFixed(2);
-
-  const summary = document.createElement("div");
-  summary.innerHTML = `
-    <h2>📊 Performance da Carteira (Peso Igual)</h2>
-    <h3 class="${carteiraYTD >= 0 ? "positive":"negative"}">
-      ${carteiraYTD}%
-    </h3>
-  `;
-
-  document.body.insertBefore(summary, container);
-}
-
-load();
-
 </script>
+
+</body>
+</html>
